@@ -82,12 +82,8 @@ const AdminDashboard: React.FC<Props> = ({ isLoggedIn, handleLogout }) => {
                 </Link>
             </div>
 
-            {loggedIn && (
-                <button onClick={handleLogout} className="logout-btn">
-                    <LogOut size={24} />
-        
-                </button>
-            )}
+            
+            
         </div>
     );
 };

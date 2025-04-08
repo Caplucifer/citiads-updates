@@ -39,6 +39,7 @@ import OwnerDashboard from './components/OwnerDashboard';
 import UserList from './components/UserList';
 import CategoryList from './components/CategoryList';
 import Shop from './components/Shop';
+import AddShop from './components/AddShop';
 
 const translations = {
   en: {
@@ -923,6 +924,7 @@ function App() {
         } />
         <Route path="/admin/categories" element={<CategoryList />} />
         <Route path="/owner/shops" element={<Shop />} />
+        <Route path="/owner/shops/add" element={<AddShop />} />
       </Routes>
 
       <footer className="footer">
