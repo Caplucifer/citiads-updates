@@ -19,8 +19,15 @@ const Shop: React.FC = () => {
 
     useEffect(() => {
         const fetchCategories = async () => {
-            try {
-                const response = await fetch("http://localhost:8080/admin/categories");
+           try {
+                const token = localStorage.getItem("token");
+                const response = await fetch("http://localhost:8080/admin/categories", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
                 }
@@ -38,10 +45,19 @@ const Shop: React.FC = () => {
         setSelectedCategory(categoryId);
         setLoading(true);
         try {
-            const response = await fetch(`/admin/shops/byCategory/${categoryId}`);
+            const token = localStorage.getItem("token");
+            const response = await fetch(`http://localhost:8080/admin/shops/byCategory/${categoryId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+    
             if (!response.ok) {
                 throw new Error("Network response was not ok");
             }
+    
             const shopsData = await response.json();
             setShops(shopsData);
         } catch (error) {
@@ -50,25 +66,38 @@ const Shop: React.FC = () => {
             setLoading(false);
         }
     };
+    
 
     const deleteShop = async (shopId: number) => {
         if (window.confirm("Are you sure you want to delete this shop?")) {
             try {
-                const response = await fetch("/owner/shops/delete", {
-                    method: "POST",
+                const token = localStorage.getItem("token");
+                // CORRECTED URL: Removed "/shops/" to match the backend @DeleteMapping
+                const response = await fetch(`http://localhost:8080/owner/delete/${shopId}`, {
+                    method: "DELETE",
                     headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Authorization": `Bearer ${token}`,
+                        // "Content-Type" is generally not needed for DELETE requests with no body
                     },
-                    body: `shopId=${shopId}`,
                 });
+    
                 if (response.ok) {
                     setShops(shops.filter(shop => shop.id !== shopId));
                     alert("Shop deleted successfully!");
                 } else {
-                    alert("Failed to delete the shop!");
+                    // More specific error handling
+                    if (response.status === 403) {
+                         alert("Failed to delete the shop: You do not have permission.");
+                    } else if (response.status === 404) {
+                         alert("Failed to delete the shop: Shop not found.");
+                    } else {
+                        const errorText = await response.text();
+                        alert("Failed to delete the shop: " + (errorText || response.statusText));
+                    }
                 }
             } catch (error) {
                 console.error("Error deleting shop:", error);
+                alert("An error occurred while trying to delete the shop.");
             }
         }
     };

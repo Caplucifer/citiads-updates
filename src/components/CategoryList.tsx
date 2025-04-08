@@ -7,38 +7,88 @@ interface Category {
 }
 
 const CategoryList: React.FC = () => {
-    const [categories, setCategories] = useState<Category[]>([]); // State to hold category data
-    const [loading, setLoading] = useState(true); // State to manage loading status
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [newCategoryName, setNewCategoryName] = useState(""); // NEW
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch("http://localhost:8080/admin/categories");
+                const token = localStorage.getItem("token");
+                const response = await fetch("http://localhost:8080/admin/categories", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
                 }
                 const data = await response.json();
-                setCategories(data); // Set the fetched category data
+                setCategories(data);
             } catch (error) {
                 console.error("Error fetching category data:", error);
             } finally {
-                setLoading(false); // Set loading to false after fetching
+                setLoading(false);
             }
         };
 
         fetchCategories();
-    }, []); // Empty dependency array to run only on mount
+    }, []);
 
-    const confirmDelete = (categoryId: number) => {
+    const confirmDelete = async (categoryId: number) => {
         if (window.confirm("Are you sure you want to delete this category?")) {
-            // Logic to delete the category
-            // You can implement the delete API call here
-            console.log(`Deleting category with ID: ${categoryId}`);
+            try {
+                const token = localStorage.getItem("token");
+                const response = await fetch(`http://localhost:8080/admin/categories/${categoryId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+                } else {
+                    console.error("Failed to delete category");
+                }
+            } catch (error) {
+                console.error("Error deleting category:", error);
+            }
+        }
+    };
+
+    const handleAddCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem("token");
+            const formData = new URLSearchParams();
+            formData.append("name", newCategoryName);
+
+            const response = await fetch("http://localhost:8080/admin/categories/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: formData.toString()
+            });
+
+            if (response.ok) {
+                const newCategory = await response.json(); // Optional
+                setCategories(prev => [...prev, newCategory]);
+                setNewCategoryName("");
+            } else {
+                console.error("Failed to add category");
+            }
+        } catch (error) {
+            console.error("Error adding category:", error);
         }
     };
 
     if (loading) {
-        return <div>Loading...</div>; // Show loading message while fetching
+        return <div>Loading...</div>;
     }
 
     return (
@@ -123,25 +173,23 @@ const CategoryList: React.FC = () => {
                     opacity: 0.8;
                 }
                 h2 {
-                    margin-top: 80px; /* Adjust as needed */
+                    margin-top: 80px;
                 }
-                    .logout-btn {
-    background-color: #2ecc71; /* Green background */
-    color: white; /* White text */
-    border: none; /* No border */
-    padding: 10px 20px; /* Padding for size */
-    border-radius: 5px; /* Rounded corners */
-    font-size: 16px; /* Font size */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s; /* Smooth transition */
-}
-
-.logout-btn:hover {
-    background-color: #27ae60; /* Darker green on hover */
-}
+                .logout-btn {
+                    background-color: #2ecc71;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: background-color 0.3s;
+                }
+                .logout-btn:hover {
+                    background-color: #27ae60;
+                }
                 `}
             </style>
-
 
             <h2>Category List</h2>
 
@@ -173,14 +221,15 @@ const CategoryList: React.FC = () => {
             </table>
 
             <div className="form-container">
-                <form 
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        // Logic to add a new category
-                        console.log("Adding new category");
-                    }}
-                >
-                    <input type="text" name="name" placeholder="Enter Category Name" required />
+                <form onSubmit={handleAddCategory}>
+                    <input 
+                        type="text" 
+                        name="name" 
+                        placeholder="Enter Category Name" 
+                        required 
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                    />
                     <button type="submit" className="add-btn">Add Category</button>
                 </form>
             </div>
