@@ -40,6 +40,7 @@ import UserList from './components/UserList';
 import CategoryList from './components/CategoryList';
 import Shop from './components/Shop';
 import AddShop from './components/AddShop';
+import Discount from './components/Discount';
 
 const translations = {
   en: {
@@ -925,6 +926,7 @@ function App() {
         <Route path="/admin/categories" element={<CategoryList />} />
         <Route path="/owner/shops" element={<Shop />} />
         <Route path="/owner/shops/add" element={<AddShop />} />
+        <Route path="/owner/shops/discount/:shopId" element={<Discount />} />
       </Routes>
 
       <footer className="footer">

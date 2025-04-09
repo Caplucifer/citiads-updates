@@ -12,11 +12,10 @@ type Shop = {
 type OwnerDashboardProps = {
   shops: Shop[];
   onDelete: (shopId: number) => void;
-  onAddShop: () => void;
   onLogout: () => void;
 };
 
-const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ shops, onDelete, onAddShop, onLogout }) => {
+const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ shops, onDelete, onLogout }) => {
   const navigate = useNavigate();
 
   const handleDelete = (shopId: number) => {
@@ -26,7 +25,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ shops, onDelete, onAddS
   };
 
   const handleAddShop = () => {
-    navigate('/owner/shops'); // Redirect to the Shop page
+    navigate('/owner/shops/add'); // Redirect to the AddShop page
   };
 
   return (

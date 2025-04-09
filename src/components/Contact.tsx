@@ -42,20 +42,20 @@ export function Contact() {
 
         <div className="grid md:grid-cols-2 gap-12">
           <div>
-            <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
-            <p className="text-lg mb-8">
+            <h1 className="text-4xl font-bold mb-6 animate-fadeIn">Contact Us</h1>
+            <p className="text-lg mb-8 animate-fadeIn">
               Have questions or suggestions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
             </p>
 
             <div className="space-y-6">
-              <div className="bg-card-bg p-4 rounded-lg">
+              <div className="bg-card-bg p-4 rounded-lg animate-fadeIn">
                 <h3 className="font-semibold mb-2">Office Hours</h3>
                 <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
                 <p>Saturday: 10:00 AM - 4:00 PM</p>
                 <p>Sunday: Closed</p>
               </div>
 
-              <div className="bg-card-bg p-4 rounded-lg">
+              <div className="bg-card-bg p-4 rounded-lg animate-fadeIn">
                 <h3 className="font-semibold mb-2">Location</h3>
                 <p>123 Market Street</p>
                 <p>City, State 12345</p>
@@ -64,7 +64,7 @@ export function Contact() {
             </div>
           </div>
 
-          <div className="bg-card-bg p-6 rounded-lg">
+          <div className="bg-card-bg p-6 rounded-lg animate-fadeIn">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-1">
@@ -151,6 +151,23 @@ export function Contact() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @media (max-width: 768px) {
+          .grid {
+            grid-template-columns: 1fr; /* Stack columns on smaller screens */
+          }
+        }
+      `}</style>
     </div>
   );
 }
