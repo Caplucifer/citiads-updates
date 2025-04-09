@@ -26,7 +26,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ shops, onDelete, onAddS
   };
 
   const handleAddShop = () => {
-    navigate('/owner/shops'); // Redirect to the Shop page
+    navigate('/owner/shops/add'); // Redirect to the Shop page
   };
 
   return (
