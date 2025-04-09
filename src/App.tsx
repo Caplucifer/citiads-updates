@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Store,
   Menu,
@@ -41,6 +41,9 @@ import CategoryList from './components/CategoryList';
 import Shop from './components/Shop';
 import AddShop from './components/AddShop';
 import Discount from './components/Discount';
+import ForgotPassword from './components/ForgotPassword';
+import VerifyOtp from './components/VerifyOtp';
+import ResetPassword from './components/ResetPassword';
 
 const translations = {
   en: {
@@ -526,6 +529,7 @@ function App() {
   );
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -763,18 +767,22 @@ function App() {
                   Logout
                 </button>
               ) : (
-                <button 
-                  className="login-btn" 
-                  onClick={() => {
-                    setShowAuthForm(!showAuthForm);
-                    setIsLoginForm(true);
-                  }}
-                  aria-label="Login"
-                >
-                  <User size={24} />
-                </button>
+                !location.pathname.includes('/forgot-password') && 
+                !location.pathname.includes('/forgot/verify-otp') && 
+                !location.pathname.includes('/reset-password') && (
+                  <button 
+                    className="login-btn" 
+                    onClick={() => {
+                      setShowAuthForm(!showAuthForm);
+                      setIsLoginForm(true);
+                    }}
+                    aria-label="Login"
+                  >
+                    <User size={24} />
+                  </button>
+                )
               )}
-              {showAuthForm && !isLoggedIn && (
+              {showAuthForm && !isLoggedIn && !location.pathname.includes('/forgot-password') && !location.pathname.includes('/forgot/verify-otp') && !location.pathname.includes('/reset-password') && (
                 <div className="auth-form-container">
                   {isLoginForm ? (
                     <form className="auth-form login-form" onSubmit={handleLogin}>
@@ -816,7 +824,7 @@ function App() {
                         Login Now
                       </button>
                       <div className="form-footer">
-                        <a href="#" className="forgot-password">Forgot password?</a>
+                        <Link to="/forgot-password" className="forgot-password">Forgot password?</Link>
                         <p>Don't have an account? <button type="button" className="switch-btn" onClick={switchToRegister}>Signup now</button></p>
                       </div>
                     </form>
@@ -927,6 +935,9 @@ function App() {
         <Route path="/owner/shops" element={<Shop />} />
         <Route path="/owner/shops/add" element={<AddShop />} />
         <Route path="/owner/shops/discount/:shopId" element={<Discount />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forgot/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
 
       <footer className="footer">
