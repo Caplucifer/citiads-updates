@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'; // Import useCallback for internal handlers if needed
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type Shop = {
@@ -9,21 +9,19 @@ type Shop = {
   };
 };
 
+// The component now only needs onLogout from the parent
 type OwnerDashboardProps = {
-  // It's still recommended for the PARENT component to memoize these props using useCallback
-  onDelete: (shopId: number) => Promise<void>; // Or (shopId: number) => void if not async
   onLogout: () => void;
 };
 
-const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onDelete, onLogout }) => {
+const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onLogout }) => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Fetch shops only ONCE when the component mounts
+  // --- Fetch Shops (runs once on mount) ---
   useEffect(() => {
-    // Define the async function inside the effect
     const fetchShops = async () => {
       setIsLoading(true);
       setError(null);
@@ -33,7 +31,6 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onDelete, onLogout }) =
         console.error("No token found. Logging out.");
         setError("Authentication token not found. Please log in again.");
         setIsLoading(false);
-        // Call the onLogout function captured during the initial render
         onLogout();
         return;
       }
@@ -52,55 +49,106 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onDelete, onLogout }) =
         } else if (response.status === 401) {
           console.warn('Session expired or unauthorized. Logging out.');
           alert('Session expired. Please log in again.');
-          // Call the onLogout function captured during the initial render
           onLogout();
         } else {
-          console.error('Failed to fetch shops:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('Failed to fetch shops:', response.status, errorText);
           setError(`Failed to fetch shops (Status: ${response.status}). Please try again later.`);
         }
-      } catch (error) {
-        console.error('Error fetching shops:', error);
-        setError('An network error occurred while fetching shops. Please check your connection.');
+      } catch (err) {
+        console.error('Network error fetching shops:', err);
+        setError('A network error occurred while fetching shops. Please check your connection.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchShops(); // Execute the fetch function
-
+    fetchShops();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // <-- **THE FIX**: Empty dependency array ensures this effect runs only ONCE on mount.
-          // We removed `onLogout` from here to prevent re-fetching if the parent provides unstable function references.
-          // The `onLogout` used inside the effect is the one available during the initial mount.
+  }, []); // Runs only once
 
-  // Internal handler for the delete button click
-  // Using useCallback here is optional but good practice if this handler were passed down further
-  // or used in another effect's dependency array *within this component*.
-  const handleDeleteClick = useCallback(async (shopId: number) => {
-    if (window.confirm('Are you sure you want to delete this shop? This action cannot be undone.')) {
-      const originalShops = [...shops]; // Create a copy for potential rollback
-      // Optimistic update
-      setShops((prevShops) => prevShops.filter((shop) => shop.id !== shopId));
+  // --- NEW Handle Shop Deletion (integrating the provided logic) ---
+  // Renamed from handleDeleteClick for clarity if desired, or keep the old name.
+  const deleteShopHandler = useCallback(async (shopId: number) => {
+    // Confirmation is now inside the handler
+    if (window.confirm(`Are you sure you want to delete shop ID ${shopId}? This action cannot be undone.`)) {
+        const token = localStorage.getItem("token");
 
-      try {
-        // Call the onDelete function passed as a prop from the parent
-        await onDelete(shopId);
-        console.log(`Shop ${shopId} delete initiated via parent handler.`);
-        // On success, the optimistic update is correct. Optionally show success message.
-      } catch (error) {
-        // On failure, revert the optimistic update and show error
-        console.error(`Failed to delete shop ${shopId} via parent handler:`, error);
-        alert(`Failed to delete shop ${shopId}. Restoring list.`);
-        setShops(originalShops); // Rollback UI change
+        if (!token) {
+            alert("Authentication error. Cannot delete shop. Please log in again.");
+            console.error("Delete aborted: No token found.");
+            onLogout(); // Logout if no token during delete attempt
+            return; // Stop the deletion process
+        }
+
+        // Store original shops *before* optimistic update, in case of failure
+        const originalShops = [...shops];
+        // Optimistic Update (remove shop from UI immediately)
+        // NOTE: We update state *before* the API call returns for better UX
+        setShops(currentShops => currentShops.filter(shop => shop.id !== shopId));
+
+        try {
+            // CORRECTED URL: Ensure this matches your backend @DeleteMapping exactly
+            // It uses /owner/delete/{shopId} based on your provided code snippet
+            const apiUrl = `http://localhost:8080/owner/delete/${shopId}`;
+            console.log(`Attempting to DELETE ${apiUrl}`); // Log the URL being hit
+
+            const response = await fetch(apiUrl, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    // "Content-Type" is generally not needed for DELETE requests with no body
+                },
+            });
+
+            if (response.ok) {
+                // Success! The optimistic update was correct.
+                console.log(`Successfully deleted shop ${shopId} via API.`);
+                alert("Shop deleted successfully!");
+                // No need to setShops again here, it was done optimistically
+            } else {
+                // API call failed, handle specific errors
+                console.error(`Failed to delete shop ${shopId}. Status: ${response.status}`);
+                 // Rollback the optimistic update
+                 setShops(originalShops);
+
+                if (response.status === 403) {
+                     alert("Failed to delete the shop: You do not have permission (403 Forbidden).");
+                     // Potentially log out if forbidden indicates a deeper auth issue
+                     // onLogout();
+                } else if (response.status === 404) {
+                     alert("Failed to delete the shop: Shop not found (404 Not Found).");
+                     // The shop might have been deleted already, UI was stale. Refresh might be needed.
+                } else {
+                    // Try to get more specific error text from the response body
+                    let errorText = response.statusText; // Fallback
+                    try {
+                       const body = await response.text(); // Read body as text
+                       if (body) { // Only use if body is not empty
+                          errorText = body;
+                       }
+                    } catch(e) { /* Ignore if reading body fails */ }
+                    alert(`Failed to delete the shop (${response.status}): ${errorText}`);
+                }
+            }
+        } catch (error) {
+            console.error("Network or other error deleting shop:", error);
+            alert(`An error occurred while trying to delete the shop: ${error instanceof Error ? error.message : 'Unknown error'}`);
+             // Rollback the optimistic update on network/other errors too
+             setShops(originalShops);
+        }
       }
-    }
-  }, [shops, onDelete]); // Depends on current 'shops' for rollback and the 'onDelete' prop
+    // Dependencies: 'shops' is needed for the optimistic update & rollback, 'onLogout' is used if token is missing
+  }, [shops, onLogout]);
 
-  // Internal handler for adding a shop
+
+  // --- Handle Add Shop Navigation ---
   const handleAddShopClick = useCallback(() => {
     navigate('/owner/shops/add');
-  }, [navigate]); // Depends on navigate
+  }, [navigate]);
 
+
+  // --- Render Component ---
   return (
     <div className="dashboard-container">
       <h2>Owner Dashboard</h2>
@@ -138,8 +186,8 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onDelete, onLogout }) =
                   </td>
                   <td>{shop.category?.name || 'N/A'}</td>
                   <td>
-                    {/* Call the internal handler */}
-                    <button className="delete-btn" onClick={() => handleDeleteClick(shop.id)}>
+                    {/* Call the new integrated delete handler */}
+                    <button className="delete-btn" onClick={() => deleteShopHandler(shop.id)}>
                       Delete
                     </button>
                   </td>
@@ -150,13 +198,9 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onDelete, onLogout }) =
         </table>
       )}
 
-      {/* Logout button still uses the direct prop */}
-      <button onClick={onLogout} style={{ marginTop: '20px' }} className="logout-btn">
-        Logout
-      </button>
-
-      {/* Styles remain the same */}
+      {/* Styles */}
       <style>{`
+        /* Styles remain the same */
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           margin: 0;

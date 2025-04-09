@@ -15,7 +15,7 @@ const CategoryList: React.FC = () => {
         const fetchCategories = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const response = await fetch("http://localhost:8080/admin/categories", {
+                const response = await fetch("http://localhost:8080/owner/categories", {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
