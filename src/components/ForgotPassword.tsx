@@ -8,14 +8,33 @@ const ForgotPassword: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate sending OTP
+        setError("");
+    
         if (!email) {
-            setError('Please enter your email.');
+            setError("Please enter your email.");
             return;
         }
-        // Here you would typically send the email to your backend
-        console.log('Sending OTP to:', email);
-        navigate('/forgot/verify-otp'); // Redirect to VerifyOtp page
+    
+        try {
+            const response = await fetch('http://localhost:8080/forgot/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // <-- Add this line
+                body: JSON.stringify({ email }),
+              });
+    
+            const data = await response.json();
+    
+            if (response.ok && data.success) {
+                console.log("OTP sent successfully.");
+                navigate("/forgot/verify-otp");
+            } else {
+                setError(data.message || "Something went wrong.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            setError("Server error. Please try again later.");
+        }
     };
 
     return (

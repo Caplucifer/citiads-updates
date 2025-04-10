@@ -10,16 +10,39 @@ const ResetPassword = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Add your password reset logic here
+        setError('');
+        setSuccess('');
+
         if (newPassword !== confirmPassword) {
             setError('Passwords do not match.');
             return;
         }
-        // Simulate a successful password reset
-        setSuccess('Password reset successfully!');
-        setTimeout(() => {
-            navigate('/login'); // Redirect to login page after success
-        }, 2000);
+
+        try {
+            const response = await fetch('http://localhost:8080/forgot/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                credentials: 'include', // Include session cookies
+                body: new URLSearchParams({
+                    newPassword,
+                    confirmPassword
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setSuccess(result.message);
+                setTimeout(() => navigate('/login'), 2000);
+            } else {
+                setError(result.message || 'Password reset failed. Please try again.');
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            setError('Network error. Please try again.');
+        }
     };
 
     return (
@@ -42,16 +65,15 @@ const ResetPassword = () => {
                 marginTop: '80px' 
             }}>
                 <h2 style={{ color: '#333', marginBottom: '15px' }}>Reset Password</h2>
-                <p>Enter your new password</p>
-                
-                {error && <div className="alert alert-danger" style={{ color: 'red', fontSize: '14px', marginBottom: '10px' }}>{error}</div>}
-                {success && <div className="alert alert-success" style={{ color: 'green', fontSize: '14px', marginBottom: '10px' }}>{success}</div>}
+                {error && <div style={{ color: 'red', fontSize: '14px', marginBottom: '10px' }}>{error}</div>}
+                {success && <div style={{ color: 'green', fontSize: '14px', marginBottom: '10px' }}>{success}</div>}
                 
                 <form onSubmit={handleSubmit}>
                     <input 
                         type="password" 
                         placeholder="New Password" 
-                        required 
+                        required
+                        minLength="6"
                         style={{ 
                             width: '90%', 
                             padding: '10px', 
@@ -66,7 +88,8 @@ const ResetPassword = () => {
                     <input 
                         type="password" 
                         placeholder="Confirm Password" 
-                        required 
+                        required
+                        minLength="6"
                         style={{ 
                             width: '90%', 
                             padding: '10px', 
@@ -88,10 +111,14 @@ const ResetPassword = () => {
                         cursor: 'pointer', 
                         fontSize: '16px', 
                         transition: '0.3s' 
-                    }}>Reset Password</button>
+                    }}>
+                        Reset Password
+                    </button>
                 </form>
                 
-                <Link to="/" style={{ display: 'block', marginTop: '10px', color: '#007bff', textDecoration: 'none', fontSize: '14px' }}>Back to Login</Link>
+                <Link to="/" style={{ display: 'block', marginTop: '10px', color: '#007bff', textDecoration: 'none', fontSize: '14px' }}>
+                    Back to Login
+                </Link>
             </div>
         </div>
     );
