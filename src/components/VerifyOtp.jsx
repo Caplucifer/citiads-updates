@@ -1,33 +1,37 @@
-// VerifyOtp.js - No changes needed from your last version
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const VerifyOtp = () => {
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
+
+    useEffect(() => {
+        setSuccessMessage('OTP has been sent to your email.');
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const trimmedOtp = otp.toString().trim(); // Handle as string and trim
+        const trimmedOtp = otp.toString().trim();
       
         if (!trimmedOtp || trimmedOtp.length !== 4) {
-          setError("OTP must be 4 digits.");
-          return;
+            setError("OTP must be 4 digits.");
+            return;
         }
       
         try {
-          const response = await fetch('http://localhost:8080/forgot/verify-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            credentials: 'include',
-            body: new URLSearchParams({ otp: trimmedOtp }), // Explicit key-value
-          });
+            const response = await fetch('http://localhost:8080/forgot/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                credentials: 'include',
+                body: new URLSearchParams({ otp: trimmedOtp }),
+            });
     
-            const result = await response.json(); // Parse JSON response
+            const result = await response.json();
     
             if (response.ok) {
-                navigate('/reset-password'); 
+                navigate('/reset-password');
             } else {
                 setError(result.message || "OTP verification failed.");
             }
@@ -37,9 +41,7 @@ const VerifyOtp = () => {
         }
     };
 
-
-    // ... rest of the JSX remains the same ...
-     return (
+    return (
         <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -59,7 +61,9 @@ const VerifyOtp = () => {
                 marginTop: '80px'
             }}>
                 <h2 style={{ color: '#333', marginBottom: '15px' }}>Verify OTP</h2>
+                {successMessage && <div style={{ color: 'green', fontSize: '14px', marginBottom: '10px' }}>{successMessage}</div>}
                 {error && <div className="alert alert-danger" style={{ color: 'red', fontSize: '14px', marginBottom: '10px' }}>{error}</div>}
+                
                 <form onSubmit={handleSubmit}>
                     <input
                         type="number"

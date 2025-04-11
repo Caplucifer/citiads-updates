@@ -1,235 +1,269 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+interface Discount {
+    id: number;
+    title: string;
+    discountPercentage: number;
+    shopId: number;
+}
+
+interface ShopImage {
+    id: number;
+    imageData: string;
+}
 
 const Discount: React.FC = () => {
+    const { shopId } = useParams<{ shopId: string }>();
     const navigate = useNavigate();
-    const [discounts, setDiscounts] = useState([]); // Assuming discounts will be fetched from an API
+    const [discounts, setDiscounts] = useState<Discount[]>([]);
+    const [images, setImages] = useState<ShopImage[]>([]);
+    const [title, setTitle] = useState('');
+    const [discountPercentage, setDiscountPercentage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    const handleDeleteDiscount = async (discountId: number, shopId: number) => {
-        if (window.confirm("Are you sure you want to delete this discount?")) {
+    const token = localStorage.getItem("token");
+
+    useEffect(() => {
+        const fetchData = async () => {
             try {
-                const response = await fetch(`/owner/shops/discount/delete`, {
-                    method: 'POST',
+                const response = await fetch(`http://localhost:8080/owner/shops/discount/${shopId}`, {
                     headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ discountId, shopId }),
+                        Authorization: `Bearer ${token}`,
+                    }
                 });
 
+                if (!response.ok) throw new Error('Failed to load data');
+
+                const data = await response.json();
+                setDiscounts(data.discounts);
+                setImages(data.images);
+            } catch (error) {
+                setErrorMessage(error instanceof Error ? error.message : 'An unknown error occurred');
+            }
+        };
+        fetchData();
+    }, [shopId]);
+
+    const handleDeleteDiscount = async (discountId: number) => {
+        if (window.confirm("Are you sure you want to delete this discount?")) {
+            try {
+                const response = await fetch(
+                    `http://localhost:8080/owner/shops/discount/delete/${discountId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        }
+                    }
+                );
+
+                const result = await response.json();
                 if (response.ok) {
-                    setSuccessMessage('Discount deleted successfully!');
-                    // Update the discounts state to remove the deleted discount
-                    setDiscounts(discounts.filter(discount => discount.id !== discountId));
+                    setDiscounts(discounts.filter(d => d.id !== discountId));
+                    setSuccessMessage(result.message);
                 } else {
-                    setErrorMessage('Failed to delete discount.');
+                    setErrorMessage(result.error);
                 }
             } catch (error) {
-                setErrorMessage('An error occurred while deleting the discount.');
+                setErrorMessage('Failed to delete discount');
+            }
+        }
+    };
+
+    const handleAddDiscount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await fetch(`http://localhost:8080/owner/shops/discount/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: new URLSearchParams({
+                    shopId: shopId || '',
+                    title,
+                    discount: discountPercentage.toString()
+                }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setDiscounts([...discounts, data]);
+                setSuccessMessage('Discount added successfully!');
+                setTitle('');
+                setDiscountPercentage('');
+            } else {
+                setErrorMessage(data.error);
+            }
+        } catch (error) {
+            setErrorMessage('Failed to add discount');
+        }
+    };
+
+    const handleImageUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+
+        try {
+            const response = await fetch(
+                `http://localhost:8080/owner/shops/${shopId}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: formData,
+                }
+            );
+
+            const data = await response.json();
+            if (response.ok) {
+                setImages([...images, data]);
+                setSuccessMessage('Image uploaded successfully!');
+                e.currentTarget.reset();
+            } else {
+                setErrorMessage(data.error);
+            }
+        } catch (error) {
+            setErrorMessage('Failed to upload image');
+        }
+    };
+
+    const handleDeleteImage = async (imageId: number) => {
+        if (window.confirm("Are you sure you want to delete this image?")) {
+            try {
+                const response = await fetch(
+                    `http://localhost:8080/owner/shops/${shopId}/delete-image/${imageId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        }
+                    }
+                );
+
+                const result = await response.json();
+                if (response.ok) {
+                    setImages(images.filter(img => img.id !== imageId));
+                    setSuccessMessage(result.message);
+                } else {
+                    setErrorMessage(result.error);
+                }
+            } catch (error) {
+                setErrorMessage('Failed to delete image');
             }
         }
     };
 
     return (
-        <div style={{ 
+        <div style={{
             background: 'white',
-            color: 'black', 
-            textAlign: 'center', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'flex-start', 
-            height: '100vh', 
-            margin: 0, 
-            paddingTop: '90px', 
-            overflowX: 'hidden' 
+            color: 'black',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            height: '100%',
+            margin: 0,
+            paddingTop: '90px',
+            overflowX: 'hidden'
         }}>
-            <div style={{ 
-                width: '100%', 
-                background: '#f39c12', 
-                color: 'white', 
-                padding: '15px', 
-                fontSize: '18px', 
-                fontWeight: 'bold', 
-                textAlign: 'center', 
-                position: 'fixed', 
-                top: '60px', 
-                left: 0, 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                boxSizing: 'border-box' 
-            }}>
-                <span>Discount: {discounts.length > 0 ? `${discounts[0].title} - Upto ${discounts[0].discountPercentage}% Off` : 'No discounts available'}</span>
-                {discounts.length > 0 && (
-                    <button 
-                        onClick={() => handleDeleteDiscount(discounts[0].id, discounts[0].shopId)} 
-                        style={{ 
-                            background: '#e74c3c', 
-                            color: 'white', 
-                            border: 'none', 
-                            padding: '8px 20px', 
-                            fontSize: '14px', 
-                            borderRadius: '5px', 
-                            cursor: 'pointer' 
-                        }}
-                    >
-                        Delete Discount
-                    </button>
-                )}
-            </div>
+            <h1>Shop Discounts</h1>
 
-            <div style={{ 
-                display: 'flex', 
-                flexWrap: 'wrap', 
-                justifyContent: 'center', 
-                gap: '20px', 
-                width: '100%', 
-                maxWidth: '1200px', 
-                marginTop: '150px' 
-            }}>
-                {discounts.length === 0 && (
-                    <div style={{ 
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        padding: '20px', 
-                        borderRadius: '10px', 
-                        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)', 
-                        width: '350px', 
-                        textAlign: 'center', 
-                        border: '1px solid black'
-                    }}>
-                        <h2>Add Discount</h2>
-                        <form onSubmit={(e) => e.preventDefault()}>
-                            <input type="hidden" name="shopId" value="1" /> {/* Replace with actual shop ID */}
-                            <label htmlFor="title">Discount Title:</label>
-                            <input type="text" id="title" name="title" required style={{ 
-                                width: '90%', 
-                                padding: '10px', 
-                                margin: '10px 0', 
-                                borderRadius: '5px', 
-                                border: '1px solid black'
-                            }} />
-                            <label htmlFor="discount">Enter Discount Percentage:</label>
-                            <input type="number" id="discount" name="discount" required min="1" max="100" style={{ 
-                                width: '90%', 
-                                padding: '10px', 
-                                margin: '10px 0', 
-                                borderRadius: '5px', 
-                                border: '1px solid black'
-                            }} />
-                            <button type="submit" style={{ 
-                                background: '#2ecc71', 
-                                color: 'white', 
-                                cursor: 'pointer', 
-                                fontWeight: 'bold', 
-                                padding: '10px', 
-                                borderRadius: '5px', 
-                                border: 'none', 
-                                width: '90%' 
-                            }}>Add Discount</button>
-                        </form>
-                    </div>
-                )}
-
-                <div style={{ 
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    padding: '20px', 
-                    borderRadius: '10px', 
-                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)', 
-                    width: '350px', 
-                    textAlign: 'center', 
-                    border: '1px solid black'
-                }}>
-                    <h2>Upload Shop Images</h2>
-                    <form onSubmit={(e) => e.preventDefault()}>
-                        <input type="file" name="imageFile" accept="image/*" required style={{ 
-                            width: '90%', 
-                            padding: '10px', 
-                            margin: '10px 0', 
-                            borderRadius: '5px', 
-                            border: '1px solid black'
-                        }} />
-                        <button type="submit" style={{ 
-                            background: '#2ecc71', 
-                            color: 'white', 
-                            cursor: 'pointer', 
-                            fontWeight: 'bold', 
-                            padding: '10px', 
-                            borderRadius: '5px', 
-                            border: 'none', 
-                            width: '90%' 
-                        }}>Upload</button>
-                    </form>
-                    <div style={{ marginTop: '10px' }}>
-                        <button style={{ 
-                            background: '#3498db', 
-                            color: 'white', 
-                            cursor: 'pointer', 
-                            padding: '10px', 
-                            borderRadius: '5px', 
-                            border: 'none', 
-                            width: '90%' 
-                        }} onClick={() => navigate(-1)}>Back</button>
-                    </div>
+            {discounts.length > 0 ? (
+                <div style={{ marginBottom: '30px' }}>
+                    {discounts.map(discount => (
+                        <div key={discount.id} style={{
+                            background: '#f9f9f9',
+                            padding: '10px 20px',
+                            color: 'red',
+                            margin: '10px auto',
+                            borderRadius: '8px',
+                            boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
+                            width: '300px'
+                        }}>
+                            <h3>{discount.title}</h3>
+                            <p>{discount.discountPercentage}% OFF</p>
+                            <button onClick={() => handleDeleteDiscount(discount.id)}>Delete Discount</button>
+                        </div>
+                    ))}
                 </div>
-            </div>
+            ) : (
+                <form onSubmit={handleAddDiscount} style={{ marginBottom: '30px' }}>
+                    <h2>Add Discount</h2>
+                    <input
+                        type="text"
+                        placeholder="Discount Title"
+                        value={title}
+                        onChange={e => setTitle(e.target.value)}
+                        required
+                    />
+                    <br />
+                    <input
+                        type="number"
+                        placeholder="Discount Percentage"
+                        value={discountPercentage}
+                        onChange={e => setDiscountPercentage(e.target.value)}
+                        required
+                    />
+                    <br />
+                    <button type="submit">Add Discount</button>
+                </form>
+            )}
 
             <h2>Shop Images</h2>
-            <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                gap: '20px', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                width: '90%', 
-                maxWidth: '1200px', 
+            <form onSubmit={handleImageUpload} encType="multipart/form-data" style={{ marginBottom: '20px' }}>
+            <input type="file" name="imageFile" required />
+                <button type="submit">Upload Image</button>
+            </form>
+
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '20px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '90%',
+                maxWidth: '1200px',
                 background: 'rgba(255, 255, 255, 0.8)',
-                padding: '20px', 
-                borderRadius: '10px', 
-                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)', 
-                marginTop: '20px' 
+                padding: '20px',
+                borderRadius: '10px',
+                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
+                marginBottom: '40px'
             }}>
-                {/* Dynamically render images here */}
+                {images.map(image => (
+                    <div key={image.id} style={{ position: 'relative' }}>
+                        <img
+                            src={`data:image/png;base64,${image.imageData}`}
+                            alt="Shop"
+                            style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
+                        />
+                        <button
+                            onClick={() => handleDeleteImage(image.id)}
+                            style={{
+                                position: 'absolute',
+                                top: '5px',
+                                right: '5px',
+                                background: 'rgba(0,0,0,0.8)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '50%',
+                                cursor: 'pointer',
+                                width: '30px',
+                                height: '30px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            ❌
+                        </button>
+                    </div>
+                ))}
             </div>
 
-            {successMessage && (
-                <div style={{ 
-                    position: 'fixed', 
-                    top: '90px', 
-                    left: '50%', 
-                    transform: 'translateX(-50%)', 
-                    background: 'rgba(0, 255, 0, 0.8)', 
-                    color: 'white', 
-                    padding: '10px 20px', 
-                    borderRadius: '5px', 
-                    fontWeight: 'bold', 
-                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)', 
-                    zIndex: 1100, 
-                    textAlign: 'center' 
-                }}>
-                    {successMessage}
-                </div>
-            )}
-
-            {errorMessage && (
-                <div style={{ 
-                    position: 'fixed', 
-                    top: '90px', 
-                    left: '50%', 
-                    transform: 'translateX(-50%)', 
-                    background: 'rgba(255, 0, 0, 0.8)', 
-                    color: 'white', 
-                    padding: '10px 20px', 
-                    borderRadius: '5px', 
-                    fontWeight: 'bold', 
-                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)', 
-                    zIndex: 1100, 
-                    textAlign: 'center' 
-                }}>
-                    {errorMessage}
-                </div>
-            )}
+            {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
+            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
         </div>
     );
 };
