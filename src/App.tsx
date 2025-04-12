@@ -315,7 +315,43 @@ function App() {
       setSearchResults([]); // Optionally clear the search results on error
     }
   };
-  
+   // --- Login Handler (Keep as is) ---
+   const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowAuthForm(false); // Close form on attempt
+    try {
+      const response = await fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginForm),
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsLoggedIn(true);
+        localStorage.setItem("userRole", data.role);
+        localStorage.setItem("token", data.token);
+
+        // Clear form
+        setLoginForm({ email: '', password: '', rememberMe: false });
+
+        // Redirect based on user role
+        if (data.role === 'USER') navigate("/");
+        else if (data.role === 'ADMIN') navigate("/admin");
+        else if (data.role === 'OWNER') navigate("/owner");
+        else navigate("/"); // Default fallback
+
+      } else {
+          const errorData = await response.text(); // Get error text
+          console.error("Login failed:", response.status, errorData);
+          alert(`Login failed: ${response.statusText} - ${errorData}`);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert(`Login error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
   
 
   // --- Logout Handler (Keep as is) ---
