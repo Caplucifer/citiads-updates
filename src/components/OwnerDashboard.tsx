@@ -243,10 +243,10 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ onLogout }) => {
           background-color: #218838;
         }
         .logout-btn {
-           background-color: #6c757d;
+           background-color:rgb(235, 12, 12);
         }
         .logout-btn:hover {
-           background-color: #5a6268;
+           background-color:rgb(223, 50, 38);
         }
 
 

@@ -227,7 +227,7 @@ const Shop: React.FC = () => {
     }
 
     .logout-btn {
-        background-color: #2ecc71;
+        background-color:rgb(209, 19, 13);
         color: white;
         border: none;
         padding: 10px 20px;
@@ -238,7 +238,7 @@ const Shop: React.FC = () => {
     }
 
     .logout-btn:hover {
-        background-color: #27ae60;
+        background-color:rgb(201, 53, 53);
     }
 `}
 </style>

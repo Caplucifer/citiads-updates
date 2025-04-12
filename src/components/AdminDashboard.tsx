@@ -1,9 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-// import { LogOut } from 'lucide-react';
-
-
-import './AdminDashboard.css';
+import { LogOut } from 'lucide-react';
 
 interface Props {
     isLoggedIn: boolean;
@@ -22,60 +19,73 @@ const AdminDashboard: React.FC<Props> = ({ isLoggedIn, handleLogout }) => {
     }, [isLoggedIn]);
 
     return (
-      
-   
-         
-<div className=" mt-2 bg-gray-100 text-gray-900 h-screen px-4 fixed w-16 md:w-64 border-r border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
- 			<h1 className='text-2xl font-bold hidden md:block mt-4 text-center italic'>Citi Offers</h1>
- 			<ul className='flex flex-col mt-5 text-xl'>
- 				<li className='flex items-center py-3 px-2 space-x-4 hover:rounded hover:cursor-pointer 
-         hover:bg-blue-600 hover:text-white'>
- 					{/* <FaTachometerAlt /> */}
- 					<span className='hidden md:inline'>Dashboard</span>
- 				</li>
- 				<li className="flex items-center py-3 px-2 space-x-4 hover:rounded hover:cursor-pointer 
-         hover:text-white hover:bg-blue-600">
- 					{/* <FaShoppingCart /> */}
- 					<Link to="/user-list">
+        <div className="relative">
+            <style>
+                {`
+                .button-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 20px;
+                    margin-top: 30px;
+                }
+                .button-container button {
+                    width: 220px;
+                    padding: 12px;
+                    font-size: 18px;
+                    cursor: pointer;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    transition: 0.3s ease-in-out;
+                    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+                }
+                .btn-list {
+                    background: #1e90ff;
+                    color: white;
+                }
+                .btn-categories {
+                    background: #2ecc71;
+                    color: white;
+                }
+                .btn-shops {
+                    background: #f39c12;
+                    color: white;
+                }
+                .button-container button:hover {
+                    transform: scale(1.1);
+                    opacity: 0.9;
+                }
+                h2 {
+                    margin-top: 80px; /* Adjust this value as needed */
+                    background: rgba(255, 255, 255, 0.2);
+                    padding: 15px 30px;
+                    border-radius: 10px;
+                    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+                }
+                `}
+            </style>
+
+            <h2>Welcome, Admin!</h2>
+
+            <div className="button-container">
+                <Link to="/user-list">
                     <button className="btn-list">List</button>
                 </Link>
- 				</li>
- 				<li className="flex items-center py-3 px-2 space-x-4 hover:rounded hover:cursor-pointer 
-         hover:text-white hover:bg-blue-600">
- 					{/* <FaUsers /> */}
-                     <Link to="/admin/categories">
+
+                <Link to="/admin/categories">
                     <button className="btn-categories">Categories</button>
                 </Link>
- 				</li>
- 				<li className="flex items-center py-3 px-2 space-x-4 hover:rounded hover:cursor-pointer 
-         hover:text-white hover:bg-blue-600">
- 					{/* <FaUser /> */}
- 					<span className="hidden md:inline ">Users</span>
- 				</li>
- 				<li className="flex items-center py-3 px-2 space-x-4 hover:rounded hover:cursor-pointer 
-         hover:text-white hover:bg-blue-600">
- 					{/* <FaBox /> */}
-                     <Link to="/owner/shops">
+
+                <Link to="/owner/shops">
                     <button className="btn-shops">Shops</button>
                 </Link>
- 				</li>
- 				<li className="flex items-center py-3 px-2 space-x-4 hover:rounded hover:cursor-pointer 
-         hover:text-white hover:bg-blue-600">
- 					{/* <FaCog /> */}
- 					<span className="hidden md:inline ">Settings</span>
- 				</li>
- 			</ul>
- 		</div>
-
-
-      
-
-           
+            </div>
 
             
             
-       
+        </div>
     );
 };
 
-export default AdminDashboard;
+export default AdminDashboard;

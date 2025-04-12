@@ -685,7 +685,6 @@ function App() {
                              <input type={showLoginPassword ? "text" : "password"} placeholder="Enter your password" className="box" required value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} />
                              <button type="button" className="password-toggle" onClick={() => setShowLoginPassword(!showLoginPassword)} aria-label={showLoginPassword ? "Hide password" : "Show password"}> {showLoginPassword ? <EyeOff size={20} /> : <Eye size={20} />} </button>
                           </div>
-                          <div className="remember"> <input type="checkbox" id="remember" checked={loginForm.rememberMe} onChange={(e) => setLoginForm({ ...loginForm, rememberMe: e.target.checked })}/> <label htmlFor="remember">Remember me</label> </div>
                           <button type="submit" className="btn">Login Now</button>
                           <div className="form-footer"> <Link to="/forgot-password" className="forgot-password" onClick={() => setShowAuthForm(false)}>Forgot password?</Link> <p>Don't have an account? <button type="button" className="switch-btn" onClick={switchToRegister}>Signup now</button></p> </div>
                        </form>
