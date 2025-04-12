@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Phone, Mail, MapPin, ExternalLink } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Modal } from './Modal';
-
+import './BusinessDetails.css'
 interface BusinessDetailsProps {
   shops: Array<{
     id: number;
@@ -162,28 +162,28 @@ export function BusinessDetails({ shops }: BusinessDetailsProps) {
           </div>
 
           {/* Photo Gallery */}
-          <div className="bg-card-bg rounded-xl p-6 shadow-lg mb-12">
-            <h2 className="text-2xl font-semibold mb-6">Photo Gallery</h2>
-            <div className="grid grid-cols-3 gap-4 [&>*:first-child]:col-span-2 [&>*:first-child]:row-span-2">
-              {galleryImages.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImageIndex(index)}
-                  className={`group relative overflow-hidden rounded-xl ${
-                    index === 0 ? 'aspect-square md:aspect-[4/3]' : 'aspect-square'
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${shop.name} - Image ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-                </button>
-              ))}
-            </div>
-          </div>
+<div className="bg-white dark:bg-card-bg rounded-2xl p-6 shadow-xl mb-16 max-w-5xl mx-auto">
+  <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">Photo Gallery</h2>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {galleryImages.slice(0, 6).map((image, index) => (
+      <button
+        key={index}
+        onClick={() => setSelectedImageIndex(index)}
+        className="group relative overflow-hidden rounded-xl aspect-[4/3]"
+        aria-label={`View image ${index + 1}`}
+      >
+        <img
+          src={image}
+          alt={`${shop?.name || 'Shop'} - Image ${index + 1}`}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+      </button>
+    ))}
+  </div>
+</div>
         </div>
       </div>
 

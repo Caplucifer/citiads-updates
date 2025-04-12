@@ -1,0 +1,25 @@
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.5s ease-in-out forwards;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr; /* Stack columns on smaller screens */
+      }
+    }
+ 
+.bg-primary{
+    color:rgb(245, 148, 148);
+    background:rgb(99, 99, 224);
+}
+.bg-primary:hover{
+    color: white;
+    background:rgb(233, 179, 78);      
+
+}

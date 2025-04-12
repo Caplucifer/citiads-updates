@@ -25,6 +25,7 @@ const Discount: React.FC = () => {
 
     const token = localStorage.getItem("token");
 
+    // Fetch Discounts and Images
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -44,8 +45,9 @@ const Discount: React.FC = () => {
             }
         };
         fetchData();
-    }, [shopId]);
+    }, [shopId, token]);
 
+    // Handle Discount Deletion
     const handleDeleteDiscount = async (discountId: number) => {
         if (window.confirm("Are you sure you want to delete this discount?")) {
             try {
@@ -71,6 +73,7 @@ const Discount: React.FC = () => {
         }
     };
 
+    // Add Discount
     const handleAddDiscount = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -101,6 +104,7 @@ const Discount: React.FC = () => {
         }
     };
 
+    // Handle Image Upload
     const handleImageUpload = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -129,6 +133,7 @@ const Discount: React.FC = () => {
         }
     };
 
+    // Handle Image Deletion
     const handleDeleteImage = async (imageId: number) => {
         if (window.confirm("Are you sure you want to delete this image?")) {
             try {
@@ -155,115 +160,108 @@ const Discount: React.FC = () => {
     };
 
     return (
-        <div style={{
-            background: 'white',
-            color: 'black',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            height: '100%',
-            margin: 0,
-            paddingTop: '90px',
-            overflowX: 'hidden'
-        }}>
-            <h1>Shop Discounts</h1>
+        <div className="bg-white text-black text-center flex flex-col items-center justify-start min-h-screen pt-24 overflow-x-hidden">
+            <h1 className="text-3xl font-bold text-blue-600 mb-6">Shop Discounts</h1>
 
+            {/* Display Discounts */}
             {discounts.length > 0 ? (
-                <div style={{ marginBottom: '30px' }}>
-                    {discounts.map(discount => (
-                        <div key={discount.id} style={{
-                            background: '#f9f9f9',
-                            padding: '10px 20px',
-                            color: 'red',
-                            margin: '10px auto',
-                            borderRadius: '8px',
-                            boxShadow: '0px 2px 5px rgba(0,0,0,0.2)',
-                            width: '300px'
-                        }}>
-                            <h3>{discount.title}</h3>
+                <div className="mb-8">
+                    {discounts.map((discount) => (
+                        <div
+                            key={discount.id}
+                            className="bg-gray-100 text-red-600 p-5 my-3 rounded-lg shadow-md w-72 mx-auto"
+                        >
+                            <h3 className="text-xl font-semibold">{discount.title}</h3>
                             <p>{discount.discountPercentage}% OFF</p>
-                            <button onClick={() => handleDeleteDiscount(discount.id)}>Delete Discount</button>
+                            <button
+                                onClick={() => handleDeleteDiscount(discount.id)}
+                                className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                            >
+                                Delete Discount
+                            </button>
                         </div>
                     ))}
                 </div>
             ) : (
-                <form onSubmit={handleAddDiscount} style={{ marginBottom: '30px' }}>
-                    <h2>Add Discount</h2>
-                    <input
-                        type="text"
-                        placeholder="Discount Title"
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
-                        required
-                    />
-                    <br />
-                    <input
-                        type="number"
-                        placeholder="Discount Percentage"
-                        value={discountPercentage}
-                        onChange={e => setDiscountPercentage(e.target.value)}
-                        required
-                    />
-                    <br />
-                    <button type="submit">Add Discount</button>
-                </form>
+                <p className="text-lg text-gray-500">No discounts available</p>
             )}
 
-            <h2>Shop Images</h2>
-            <form onSubmit={handleImageUpload} encType="multipart/form-data" style={{ marginBottom: '20px' }}>
-            <input type="file" name="imageFile" required />
-                <button type="submit">Upload Image</button>
+            {/* Add Discount Form */}
+            <form
+                onSubmit={handleAddDiscount}
+                className="mb-8 flex flex-col items-center gap-3"
+            >
+                <h2 className="text-2xl font-semibold mb-2">Add Discount</h2>
+                <input
+                    type="text"
+                    placeholder="Discount Title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="border border-gray-300 rounded px-3 py-2 w-64"
+                />
+                <input
+                    type="number"
+                    placeholder="Discount Percentage"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                    required
+                    min="1"
+                    max="100"
+                    className="border border-gray-300 rounded px-3 py-2 w-64"
+                />
+                <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
+                >
+                    Add Discount
+                </button>
             </form>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '20px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '90%',
-                maxWidth: '1200px',
-                background: 'rgba(255, 255, 255, 0.8)',
-                padding: '20px',
-                borderRadius: '10px',
-                boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)',
-                marginBottom: '40px'
-            }}>
-                {images.map(image => (
-                    <div key={image.id} style={{ position: 'relative' }}>
+            {/* Success and Error Messages */}
+            {successMessage && <p className="text-green-600 font-medium">{successMessage}</p>}
+            {errorMessage && <p className="text-red-600 font-medium">{errorMessage}</p>}
+
+            {/* Upload Images Section */}
+            <h2 className="text-2xl font-semibold mb-4">Shop Images</h2>
+
+            <form
+                onSubmit={handleImageUpload}
+                encType="multipart/form-data"
+                className="mb-6"
+            >
+                <input
+                    type="file"
+                    name="imageFile"
+                    required
+                    className="mb-2"
+                />
+                <button
+                    type="submit"
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                    Upload Image
+                </button>
+            </form>
+
+            {/* Display Uploaded Images */}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-5 w-11/12 max-w-screen-xl bg-white bg-opacity-80 p-6 rounded-lg shadow-xl border-2 border-red-500 mb-10">
+                {images.map((image) => (
+                    <div key={image.id} className="relative">
                         <img
                             src={`data:image/png;base64,${image.imageData}`}
                             alt="Shop"
-                            style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
+                            className="w-full h-auto rounded-lg"
                         />
                         <button
                             onClick={() => handleDeleteImage(image.id)}
-                            style={{
-                                position: 'absolute',
-                                top: '5px',
-                                right: '5px',
-                                background: 'rgba(0,0,0,0.8)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '50%',
-                                cursor: 'pointer',
-                                width: '30px',
-                                height: '30px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
+                            className="absolute top-1 right-1 bg-black bg-opacity-80 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-90"
                         >
                             ❌
                         </button>
                     </div>
                 ))}
             </div>
-
-            {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
         </div>
     );
 };
