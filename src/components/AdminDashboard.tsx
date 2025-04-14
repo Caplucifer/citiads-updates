@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { LogOut } from 'lucide-react';
 
 interface Props {
     isLoggedIn: boolean;
@@ -11,7 +10,6 @@ const AdminDashboard: React.FC<Props> = ({ isLoggedIn, handleLogout }) => {
     const [loggedIn, setLoggedIn] = React.useState(false);
 
     useEffect(() => {
-        // Simulate an API call or some logic to determine login status
         const checkLoginStatus = () => {
             setLoggedIn(isLoggedIn);
         };
@@ -52,12 +50,16 @@ const AdminDashboard: React.FC<Props> = ({ isLoggedIn, handleLogout }) => {
                     background: #f39c12;
                     color: white;
                 }
+                .btn-slider {
+                    background: #9b59b6;
+                    color: white;
+                }
                 .button-container button:hover {
                     transform: scale(1.1);
                     opacity: 0.9;
                 }
                 h2 {
-                    margin-top: 80px; /* Adjust this value as needed */
+                    margin-top: 80px;
                     background: rgba(255, 255, 255, 0.2);
                     padding: 15px 30px;
                     border-radius: 10px;
@@ -80,12 +82,13 @@ const AdminDashboard: React.FC<Props> = ({ isLoggedIn, handleLogout }) => {
                 <Link to="/owner/shops">
                     <button className="btn-shops">Shops</button>
                 </Link>
-            </div>
 
-            
-            
+                <Link to="/admin/slider">
+                    <button className="btn-slider">Slider</button>
+                </Link>
+            </div>
         </div>
     );
 };
 
-export default AdminDashboard;
+export default AdminDashboard;

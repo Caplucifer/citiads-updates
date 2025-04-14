@@ -55,6 +55,7 @@ interface Category {
 interface Shop {
   id: number;
   name: string;
+  imageUrl?: string; // Base64 data URI
   // 'category' field from backend might represent the category ID or name.
   // Adjust based on your API response. If it's ID, you might need category data to display name/icon.
   // For now, assuming it might be a string key matching iconKey, but API fetching handles the filtering.
@@ -168,23 +169,44 @@ function App() {
   const fetchAllShops = async () => {
     console.log("Fetching all shops...");
     setLoading(true);
-    setCurrentPage(1); // Reset page when fetching new data set
+    setCurrentPage(1);
+  
     try {
-      const response = await fetch("http://localhost:8080/owner/shops"); // Public endpoint assumed
+      const response = await fetch("http://localhost:8080/owner/shops");
       if (!response.ok) {
         throw new Error(`Failed to fetch shops: ${response.statusText} (${response.status})`);
       }
-      const data = await response.json();
-      if (!Array.isArray(data)) throw new Error("Invalid shops data format received.");
-      setShops(data);
-      setSelectedCategory('all'); // Update state to reflect "All" is selected
+  
+      const shopsData: Shop[] = await response.json();
+  
+      const shopsWithImages = await Promise.all(
+        shopsData.map(async (shop) => {
+          try {
+            const imageResponse = await fetch(`http://localhost:8080/owner/shops/images/${shop.id}`);
+            if (imageResponse.ok) {
+              const images = await imageResponse.json();
+              if (Array.isArray(images) && images.length > 0 && images[0].imageData) {
+                const imageUrl = `data:image/jpeg;base64,${images[0].imageData}`;
+                return { ...shop, imageUrl };
+              }
+            }
+          } catch (err) {
+            console.warn(`Could not fetch image for shop ${shop.id}`);
+          }
+          return { ...shop, imageUrl: "" }; // fallback if no image
+        })
+      );
+  
+      setShops(shopsWithImages);
+      setSelectedCategory("all");
     } catch (error) {
       console.error("Error fetching all shops:", error);
-      setShops([]); // Clear shops on error
+      setShops([]);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const fetchShopsByCategory = async (categoryId: number) => {
     // Find the category to potentially get its iconKey if needed later, though not used for filtering now
@@ -246,7 +268,6 @@ function App() {
         setShops([]);
         setLoading(false); // Ensure loading stops on error
       }
-      // No finally here, as fetchAllShops handles its own final setLoading(false)
     };
 
     fetchData();
@@ -478,22 +499,28 @@ function App() {
           {currentShops.length > 0 ? (
             currentShops.map((shop: Shop) => (
               <Link to={`/business/${shop.id}`} key={shop.id} className="shop-card">
-                <div className="shop-image">
-                  <img
-                    src={shop.image || DEFAULT_PLACEHOLDER_URL}
-                    alt={shop.name}
-                    onError={(e) => {
-                      const fallbackFullUrl = window.location.origin + LOCAL_FALLBACK_IMAGE_URL;
-                      if (e.currentTarget.src !== fallbackFullUrl) {
-                           console.warn(`Image failed: ${e.currentTarget.src}. Falling back locally.`);
-                           e.currentTarget.src = LOCAL_FALLBACK_IMAGE_URL;
-                           e.currentTarget.alt = `${shop.name} (Image unavailable)`;
-                      } else {
-                           console.error("Local fallback failed:", LOCAL_FALLBACK_IMAGE_URL);
-                      }
-                    }}
-                  />
-                </div>
+  <div className="shop-image">
+  <img
+  src={shop.imageUrl || LOCAL_FALLBACK_IMAGE_URL}
+  alt={shop.name}
+  onError={(e) => {
+    const target = e.target as HTMLImageElement;
+
+    // Prevent infinite loop by checking for current fallback
+    if (target.dataset.fallback === "local") {
+      target.src = DEFAULT_PLACEHOLDER_URL;
+      target.dataset.fallback = "default";
+    } else if (!target.dataset.fallback) {
+      target.src = LOCAL_FALLBACK_IMAGE_URL;
+      target.dataset.fallback = "local";
+    } else {
+      // If even the default fails, just remove the image or stop retrying
+      target.onerror = null;
+    }
+  }}
+/>
+
+  </div>
                 <div className="shop-content">
                   <h3>{shop.name}</h3>
                   <p>{shop.description}</p>
@@ -1275,20 +1302,21 @@ main { /* Assuming Routes are wrapped in main or similar */
      box-shadow: 0 8px 15px rgba(255,255,255,0.08);
 }
 
-.shop-image {
-    width: 100%;
-    height: 200px; /* Fixed height */
-    overflow: hidden;
-    background-color: #eee; /* Background for loading/error state */
+..shop-image {
+  position: relative;
+  background: #f0f0f0 url('/no-image-placeholder.png') no-repeat center center;
+  background-size: 50%;
 }
-[data-theme="dark"] .shop-image {
-    background-color: #444;
-}
+
 .shop-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Cover the area */
-    display: block;
+  position: relative;
+  z-index: 1;
+  background-color: white; /* Fallback color behind image */
+  transition: opacity 0.3s ease;
+}
+
+.shop-image img[src*="base64"] {
+  background: transparent;
 }
 .shop-content {
     padding: 1rem;
